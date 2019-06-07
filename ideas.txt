@@ -1,0 +1,4 @@
+Situations:
+
+Top Pair against open ended straight draw - flop - turn 
+Top Pair against flush draw - flop - turn
