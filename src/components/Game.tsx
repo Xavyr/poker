@@ -1,4 +1,5 @@
 import * as React from "react";
+import { MoneyLine } from "./MoneyLine";
 import { Pot } from "./Pot";
 import { SingleHand } from "./SingleHand";
 import { Board } from "./Board";
@@ -19,7 +20,19 @@ type State = {
   };
   pot: number;
   bet: number;
-  trajectory: Array<number>;
+  decisions?: Array<{
+    equityEarnedOrLost: number;
+    heroPercentage: number;
+    potOdds: number;
+    cards: {
+      hero: Array<string>;
+      villain: Array<string>;
+      board: Array<string>;
+    };
+    correct: boolean;
+  }>;
+  lastDecisionCorrect?: boolean;
+  moneyLine: number;
 };
 
 export class Game extends React.Component<Props, State> {
@@ -34,7 +47,9 @@ export class Game extends React.Component<Props, State> {
     },
     pot: 0,
     bet: 0,
-    trajectory: []
+    decisions: null,
+    lastDecisionCorrect: false,
+    moneyLine: 0
   };
 
   generateNewHand = () => {
@@ -51,16 +66,75 @@ export class Game extends React.Component<Props, State> {
     this.setState({ currHandOdds: handOddsAfterFlop, pot, bet });
   };
 
-  call = () => {
-    //XAVYR, do all the math here, pot odds and such-- perhaps show a perfect money line becasue the money can cahnge
-    //so much so maybe need to see how i am different than ideal play
+  determinePotOdds = () => {
+    const { bet, pot } = this.state;
+    return Math.floor((bet / (pot + bet)) * 100);
   };
 
-  fold = () => {};
+  proffitable = (action: string) => {
+    const { currHandOdds, pot, bet } = this.state;
+    return action === "call"
+      ? ((currHandOdds.hero - this.determinePotOdds()) / 100) * (pot + bet) >= 0
+      : ((currHandOdds.hero - this.determinePotOdds()) / 100) * (pot + bet) <=
+          0;
+  };
+
+  calculateGainedOrLostEquity = (correct: boolean) => {
+    const { currHandOdds, pot, bet } = this.state;
+    const potOdds = this.determinePotOdds();
+    console.log(potOdds, currHandOdds, correct);
+    const netOutput = ((currHandOdds.hero - potOdds) / 100) * (pot + bet);
+
+    if (correct && netOutput <= 0) {
+      return netOutput * -1;
+    }
+
+    if (!correct && netOutput >= 0) {
+      return netOutput * -1;
+    }
+
+    return netOutput;
+  };
+
+  updateMoneyLine = (correct: boolean) => {
+    const { moneyLine } = this.state;
+    return moneyLine + this.calculateGainedOrLostEquity(correct);
+  };
+
+  callOrFold = (action: string) => {
+    const { bet, pot, currHandOdds } = this.state;
+    const potOdds = this.determinePotOdds();
+    const lastDecisionCorrect = this.proffitable(action);
+    const updatedMoneyLine = this.updateMoneyLine(lastDecisionCorrect);
+
+    const singleDecision = {
+      equityEarnedOrLost: this.calculateGainedOrLostEquity(lastDecisionCorrect),
+      heroPercentage: currHandOdds.hero,
+      potOdds,
+      bet,
+      pot,
+      cards: {
+        hero: this.state.hero,
+        villain: this.state.villain,
+        board: this.state.board
+      },
+      correct: lastDecisionCorrect
+    };
+    const allDecisions = this.state.decisions ? this.state.decisions : [];
+    allDecisions.push(singleDecision);
+    this.setState({
+      decisions: allDecisions,
+      lastDecisionCorrect,
+      moneyLine: updatedMoneyLine
+    });
+
+    //Start New Hand
+    this.generateNewHand();
+  };
 
   render() {
     console.log("this.state", this.state);
-    const { hero, villain, board, pot, bet } = this.state;
+    const { moneyLine, hero, villain, board, pot, bet, decisions } = this.state;
 
     //hero's hand
     const firstHeroCard = hero[0];
@@ -78,6 +152,7 @@ export class Game extends React.Component<Props, State> {
     return (
       <div>
         <button onClick={this.generateNewHand}>Generate New Hand</button>
+        <MoneyLine moneyLine={moneyLine} decisions={decisions} />
         <div>
           <Pot moneyInPot={pot} bet={bet} />
         </div>
@@ -106,8 +181,8 @@ export class Game extends React.Component<Props, State> {
           />
         </div>
         <div style={{ display: "flex", flexDirection: "row", marginTop: 100 }}>
-          <button onClick={this.call}>Call!</button>
-          <button onClick={this.fold}>Fold</button>
+          <button onClick={() => this.callOrFold("call")}>Call!</button>
+          <button onClick={() => this.callOrFold("fold")}>Fold</button>
         </div>
       </div>
     );
