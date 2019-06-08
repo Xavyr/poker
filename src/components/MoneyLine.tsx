@@ -10,26 +10,39 @@ type State = {
   baseline: number;
 };
 
-const MoneyPoint = ({ equity }) => {
-  return <li>{equity}</li>;
+const MoneyItem = styled.li`
+  color: ${props => (props.correct ? "green" : "red")};
+`;
+
+const Bankroll = styled.h5`
+  color: ${props => (props.moneyLine > 0 ? "green" : "red")};
+`;
+
+const MoneyPoint = ({ equity, correct }) => {
+  return <MoneyItem correct={correct}>{equity}</MoneyItem>;
 };
 
 export class MoneyLine extends React.Component<Props, State> {
   render() {
     const { moneyLine, decisions } = this.props;
-    console.log("DECISIONS", decisions);
     return (
       <div style={{ color: "white", backgroundColor: "black" }}>
         <h1>Money Line</h1>
         <div>
-          <h5>Net Bankroll: {moneyLine}</h5>
+          <h5>Net Bankroll:</h5>
+          <Bankroll moneyLine={moneyLine}>{moneyLine}</Bankroll>
         </div>
         <div>
           <h5>Decisions:</h5>
           <ul>
             {decisions &&
               decisions.map(decision => {
-                return <MoneyPoint equity={decision.equityEarnedOrLost} />;
+                return (
+                  <MoneyPoint
+                    correct={decision.correct}
+                    equity={decision.equityEarnedOrLost}
+                  />
+                );
               })}
           </ul>
         </div>

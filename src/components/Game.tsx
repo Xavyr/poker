@@ -52,6 +52,15 @@ export class Game extends React.Component<Props, State> {
     moneyLine: 0
   };
 
+  startNewSession = () => {
+    this.setState({
+      decisions: null,
+      lastDecisionCorrect: false,
+      moneyLine: 0
+    });
+    this.generateNewHand();
+  };
+
   generateNewHand = () => {
     //generate different states for situation, board, hand
     console.log("generating...");
@@ -82,18 +91,17 @@ export class Game extends React.Component<Props, State> {
   calculateGainedOrLostEquity = (correct: boolean) => {
     const { currHandOdds, pot, bet } = this.state;
     const potOdds = this.determinePotOdds();
-    console.log(potOdds, currHandOdds, correct);
     const netOutput = ((currHandOdds.hero - potOdds) / 100) * (pot + bet);
 
     if (correct && netOutput <= 0) {
-      return netOutput * -1;
+      return Math.floor(netOutput * -1);
     }
 
     if (!correct && netOutput >= 0) {
-      return netOutput * -1;
+      return Math.floor(netOutput * -1);
     }
 
-    return netOutput;
+    return Math.floor(netOutput);
   };
 
   updateMoneyLine = (correct: boolean) => {
@@ -151,7 +159,7 @@ export class Game extends React.Component<Props, State> {
 
     return (
       <div>
-        <button onClick={this.generateNewHand}>Generate New Hand</button>
+        <button onClick={this.startNewSession}>Start New Session</button>
         <MoneyLine moneyLine={moneyLine} decisions={decisions} />
         <div>
           <Pot moneyInPot={pot} bet={bet} />
