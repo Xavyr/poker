@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 export const generatePot = () => [200][Math.floor(Math.random() * 1)];
+=======
+export const generatePot = () => [1000][Math.floor(Math.random() * 1)];
+>>>>>>> 3f616d37bf8195b804929e2004d56d218f37a07a
 
 export const generateBet = (currPot: number) =>
   currPot *
