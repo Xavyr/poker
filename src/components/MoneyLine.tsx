@@ -1,28 +1,36 @@
 import * as React from "react";
 
 type Props = {
-  trajectory: Array<number>;
+  decisions: Array<{}>;
+  moneyLine: number;
 };
 
 type State = {
   baseline: number;
 };
 
-export class MoneyLine extends React.Component<Props, State> {
-  public state: State = {
-    baseline: 0
-  };
+const MoneyPoint = ({ equity }) => {
+  return <li>{equity}</li>;
+};
 
+export class MoneyLine extends React.Component<Props, State> {
   render() {
-    const { trajectory } = this.props;
+    const { moneyLine, decisions } = this.props;
+    console.log("DECISIONS", decisions);
     return (
-      <div>
+      <div style={{ color: "white", backgroundColor: "black" }}>
         <h1>Money Line</h1>
         <div>
-          <h5>Baseline: {this.state.baseline}</h5>
+          <h5>Net Bankroll: {moneyLine}</h5>
         </div>
         <div>
-          <h5>Trajectory: {trajectory}</h5>
+          <h5>Decisions:</h5>
+          <ul>
+            {decisions &&
+              decisions.map(decision => {
+                return <MoneyPoint equity={decision.equityEarnedOrLost} />;
+              })}
+          </ul>
         </div>
       </div>
     );
